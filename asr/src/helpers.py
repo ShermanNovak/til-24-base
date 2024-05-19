@@ -2,6 +2,7 @@ import librosa
 import pandas as pd
 import json
 import base64
+import pickle
 
 SAMPLE_RATE = 16000
 
@@ -9,7 +10,7 @@ def convert_to_mel_spectrogram(audio_data, sample_rate=SAMPLE_RATE):
     mel_spectrogram = librosa.feature.melspectrogram(y=audio_data, sr=sample_rate, n_mels=80)
     return mel_spectrogram
 
-def read_data(file_path):
+def read_data(file_path, dataframe_path):
     instances = []
     
     with open(f"{file_path}/asr.jsonl", "r") as f:
@@ -24,8 +25,10 @@ def read_data(file_path):
                 )
                 
     df = pd.DataFrame(instances)
+    df.to_pickle(dataframe_path)
+
     return df
-        
+
 def compute_metrics(pred):
     pred_ids = pred.predictions
     label_ids = pred.label_ids

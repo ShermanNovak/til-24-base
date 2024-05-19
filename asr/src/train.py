@@ -1,4 +1,9 @@
 import evaluate
+import os
+import torch
+import pandas as pd
+import numpy as np
+
 from DataCollator import DataCollator
 from AudioAugDataset import AudioAugDataset
 
@@ -20,9 +25,13 @@ spec_augment = SpecCompose(
     ]
 )
 
+DATAFRAME_PATH = '../tmp/asr_dataframe.pkl'
 FILE_PATH = "../../../advanced"
 
-df = read_data(FILE_PATH)
+if os.path.exists(DATAFRAME_PATH):
+    df = pd.read_pickle(DATAFRAME_PATH) 
+else:
+    df = read_data(FILE_PATH, DATAFRAME_PATH)
 
 print(df.head())
 
@@ -30,11 +39,16 @@ feature_extractor = WhisperFeatureExtractor.from_pretrained("openai/whisper-smal
 tokenizer = WhisperTokenizer.from_pretrained("openai/whisper-small", language="English", task="transcribe")
 
 model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-small")
+
 model.generation_config.language = "english"
 model.generation_config.task = "transcribe"
 model.generation_config.forced_decoder_ids = None
 
-processor = WhisperProcessor.from_pretrained("openai/whisper-small", language="English", task="transcribe")
+# from faster_whisper import WhisperModel
+
+# model = WhisperModel("distil-large-v2")
+
+# processor = WhisperProcessor.from_pretrained("openai/whisper-small", language="English", task="transcribe")
 
 audioAugDataset = AudioAugDataset(df, FILE_PATH, wav_augment, spec_augment, tokenizer)
 
@@ -49,7 +63,8 @@ print(train_ds[1]['input_features'].shape)
 metric = evaluate.load("wer")
 
 data_collator = DataCollator(
-    processor=processor,
+    tokenizer=tokenizer,
+    feature_extractor=feature_extractor,
     decoder_start_token_id=model.config.decoder_start_token_id,
 )
 
@@ -66,8 +81,8 @@ training_args = Seq2SeqTrainingArguments(
     per_device_eval_batch_size=8,
     predict_with_generate=True,
     generation_max_length=225,
-    save_steps=1000,
-    eval_steps=1000,
+    save_steps=25,
+    eval_steps=25,
     logging_steps=25,
     report_to=["tensorboard"],
     load_best_model_at_end=True,
@@ -86,6 +101,7 @@ trainer = Seq2SeqTrainer(
     tokenizer=tokenizer
 )
 
+# trainer.train(resume_from_checkpoint=True)
 trainer.train()
 
 kwargs = {
