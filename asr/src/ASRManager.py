@@ -1,3 +1,5 @@
+import AudioAugDataset
+
 class ASRManager:
     def __init__(self):
         # initialize the model here
