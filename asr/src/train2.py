@@ -142,8 +142,8 @@ def get_dataset_dict():
     return dataset_dict
     
 
-#if __name__ == '__main__':
-def train():
+if __name__ == '__main__':
+# def train():
     processor = WhisperProcessor.from_pretrained(model_name_or_path, language=language, task=task)
     
     config = WhisperConfig.from_pretrained(model_name_or_path, quantization_config=BitsAndBytesConfig(load_in_8bit=True))
@@ -173,24 +173,24 @@ def train():
         num_train_epochs=1,
         evaluation_strategy="steps",
         gradient_checkpointing=True,
-        # fp16=True,
+        fp16=True,
         per_device_eval_batch_size=8,
         generation_max_length=128,
         save_steps=100,
         logging_steps=25,
+        # eval_steps=5,
         # max_steps=5, # only for testing purposes, remove this from your final run :)
         remove_unused_columns=False,  # required as the PeftModel forward doesn't have the signature of the wrapped model's forward
         label_names=["labels"],  # same reason as above
         push_to_hub=True,
-        metric_for_best_model="wer",
         load_best_model_at_end=True,
     )
     
     trainer = Seq2SeqTrainer(
         args=training_args,
         model=model,
-        train_dataset=train_dict["train"],
-        eval_dataset=train_dict["test"],
+        train_dataset=dataset_dict["train"],
+        eval_dataset=dataset_dict["test"],
         data_collator=data_collator,
         # compute_metrics=compute_metrics,
         tokenizer=processor.feature_extractor,
@@ -200,5 +200,5 @@ def train():
     
     trainer.train()
     
-    peft_model_id = "whisper-peft"
+    peft_model_id = "helps-peft"
     model.push_to_hub(peft_model_id)
