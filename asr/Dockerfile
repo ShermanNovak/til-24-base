@@ -14,6 +14,7 @@ ENV PYTHONUNBUFFERED 1
 ENV PIP_ROOT_USER_ACTION=ignore
 
 RUN pip install -U pip
+RUN apt-get -y update && apt-get -y upgrade && apt-get install -y --no-install-recommends ffmpeg
 WORKDIR /workspace
 
 # install other requirements

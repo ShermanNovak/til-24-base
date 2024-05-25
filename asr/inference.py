@@ -30,8 +30,12 @@ forced_decoder_ids = processor.get_decoder_prompt_ids(language=language, task=ta
 pipe = AutomaticSpeechRecognitionPipeline(model=model, tokenizer=tokenizer, feature_extractor=feature_extractor)
 
 def transcribe(audio):
+    start_time = time.time()  # Start the timer
     with torch.cuda.amp.autocast():
         text = pipe(audio, generate_kwargs={"forced_decoder_ids": forced_decoder_ids}, max_new_tokens=255)["text"]
+    end_time = time.time()  # End the timer
+    elapsed_time = end_time - start_time  # Calculate the elapsed time
+    print(f"Transcription completed in {elapsed_time:.2f} seconds")  # Print the elapsed time
     return text
 
 print(transcribe("../../../advanced/audio/audio_0.wav"))
