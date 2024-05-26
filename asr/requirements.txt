@@ -1,8 +1,9 @@
-transformers==4.31.0
-librosa==0.10.1
+transformers
+librosa
 fastapi
 accelerate
 uvicorn[standard]
-pandas==2.0.3
+pandas
 peft
 ffmpeg
+tf-keras

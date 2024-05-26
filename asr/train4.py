@@ -17,7 +17,7 @@ DATAFRAME_PATH = './tmp/asr_dataframe.pkl'
 FILE_PATH = "../../advanced"
 DIRECTORY_PREFIX = "../../advanced/audio/"
 
-model_name_or_path = "distil-whisper/distil-large-v3"
+model_name_or_path = "openai/whisper-base.en"
 task = "transcribe"
 language = "English"
 language_abbr = "en" # Short hand code for the language we want to fine-tune
@@ -26,11 +26,9 @@ peft_model_id = "faster-peft"
 # Assuming df is your DataFrame
 def df_to_dataset(df):
     df['audio'] = df['audio'].apply(lambda x: DIRECTORY_PREFIX + x)
-    df['b64'] = df['b64'].apply(lambda x: base64.b64decode(x))
     dataset = Dataset.from_pandas(df)
     dataset = dataset.cast_column("audio", Audio(sampling_rate=16000))
     return dataset
-
 
 
 def prepare_dataset(batch):
@@ -134,12 +132,12 @@ def get_dataset_dict():
         )
         
         dataset_dict = dataset_dict.map(prepare_dataset, remove_columns=dataset_dict.column_names["train"], num_proc=1)
-        
+            
         with open(DATASETDICT_PATH, "wb") as f:
             pickle.dump(dataset_dict, f)
             
-    print(dataset_dict)
-    print(dataset_dict['train'][0])
+        print(dataset_dict)
+        print(dataset_dict['train'][0])
     
     return dataset_dict
 
@@ -151,6 +149,7 @@ if __name__ == '__main__':
     config = WhisperConfig.from_pretrained(model_name_or_path, quantization_config=BitsAndBytesConfig(load_in_8bit=True))
     
     model = WhisperForConditionalGeneration.from_pretrained(model_name_or_path, config=config)
+    model.config.max_length=150
     
     dataset_dict = get_dataset_dict()
     
